@@ -1,0 +1,30 @@
+apply plugin: 'maven'
+
+
+
+configurations {
+  zip
+}
+
+repositories {
+    maven {
+        credentials {
+            username 'USER NAME'
+            password 'PASSWORD'
+        }
+        url "https://repository.hybris.com/hybris-repository/"
+    }
+}
+
+
+dependencies {
+   zip 'de.hybris.platform:hybris-commerce-suite:5.1.0.0@zip'
+}
+
+
+task unzipIt(type: Copy){
+        def hybrisZip=file(configurations.zip.files.iterator().next())
+        def outDir=file('unpacked')
+        from zipTree(hybrisZip)
+        into outDir
+}

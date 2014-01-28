@@ -1,16 +1,23 @@
-apply plugin: 'maven'
-
-
+apply plugin: 'maven'
 
 configurations {
   zip
+  antClasspath 
 }
+
+
+
+dependencies { 
+  antClasspath 'org.apache.ant:ant-1.1.1' 
+} 
+
+
 
 repositories {
     maven {
         credentials {
-            username 'USER NAME'
-            password 'PASSWORD'
+            username ''
+            password ''
         }
         url "https://repository.hybris.com/hybris-repository/"
     }
@@ -24,7 +31,26 @@ dependencies {
 
 task unzipIt(type: Copy){
         def hybrisZip=file(configurations.zip.files.iterator().next())
-        def outDir=file('unpacked')
+        def outDir=file('myproject')
         from zipTree(hybrisZip)
         into outDir
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.10'
+}
+
+task copyTask(type: Copy, dependsOn: 'unzipIt') {
+    from 'myproject/hybris/bin/platform/resources/configtemplates/develop'
+    into 'myproject/hybris/config'
+}
+
+
+task test(type: Exec) {
+  File hybrisHome = file('myproject/hybris')
+  String fn = hybrisHome.absolutePath + '/bin/platform'
+  workingDir file(fn);
+  def envMap = ['ANT_HOME': fn + '/apache-ant-1.9.1']
+  environment envMap
+  commandLine 'ant.bat','-f','build.xml'  
 }

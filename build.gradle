@@ -1,15 +1,9 @@
 apply plugin: 'maven'
 
 configurations {
-  zip
-  antClasspath 
+  zip 
+  cuppy
 }
-
-
-
-dependencies { 
-  antClasspath 'org.apache.ant:ant-1.1.1' 
-} 
 
 
 
@@ -25,15 +19,24 @@ repositories {
 
 
 dependencies {
-   zip 'de.hybris.platform:hybris-commerce-suite:5.1.0.0@zip'
+   zip hybrisartifact
+   cuppy 'de.hybris.platform:cuppy:5.0.0.0-SNAPSHOT@jar'
 }
 
 
 task unzipIt(type: Copy){
-        def hybrisZip=file(configurations.zip.files.iterator().next())
-        def outDir=file('myproject')
-        from zipTree(hybrisZip)
-        into outDir
+		def f = file(projectname+'/hybris/bin')
+		if (!f.exists()){
+			def hybrisZip=file(configurations.zip.files.iterator().next())
+			def outDir=file('myproject')
+			from zipTree(hybrisZip)
+			into outDir
+
+		}
+			def cuppyZip=file(configurations.cuppy.files.iterator().next())
+			def outDir=file('cuppyZip')
+			from zipTree(hybrisZip)
+			into outDir
 }
 
 task wrapper(type: Wrapper) {
@@ -41,16 +44,20 @@ task wrapper(type: Wrapper) {
 }
 
 task copyTask(type: Copy, dependsOn: 'unzipIt') {
-    from 'myproject/hybris/bin/platform/resources/configtemplates/develop'
-    into 'myproject/hybris/config'
+		from projectname + '/hybris/bin/platform/resources/configtemplates/develop'
+		into projectname + '/hybris/config'
 }
 
 
-task test(type: Exec) {
-  File hybrisHome = file('myproject/hybris')
+task test(type: Exec, dependsOn: 'copyTask') {
+  File hybrisHome = file(projectname + '/hybris')
   String fn = hybrisHome.absolutePath + '/bin/platform'
   workingDir file(fn);
   def envMap = ['ANT_HOME': fn + '/apache-ant-1.9.1']
   environment envMap
   commandLine 'ant.bat','-f','build.xml'  
 }
+
+
+
+
